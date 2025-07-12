@@ -13,6 +13,10 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     [SerializeField] private GameObject sessionPanel;
     [SerializeField] private Button startSessionButton;
     [SerializeField] private Button endSessionButton;
+    [SerializeField] private TextMeshProUGUI maxPlayersAllowed;
+    [SerializeField] private UIManager uiManager;
+
+    public event Action<List<SessionInfo>> SessionsListUpdated;
 
     void Start()
     {
@@ -26,13 +30,38 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
         {
             GameMode = GameMode.Shared,
             SessionName = "GameID",
-            OnGameStarted = OnGameStarted
+            OnGameStarted = OnGameStarted,
+            PlayerCount = int.Parse(maxPlayersAllowed.text)
+        });
+    }
+
+    public void StartSession(TextMeshProUGUI text)
+    {
+        networkRunner.StartGame(new StartGameArgs()
+        {
+            GameMode = GameMode.Shared,
+            SessionName = text.text,
+            OnGameStarted = OnGameStarted,
+            PlayerCount = int.Parse(maxPlayersAllowed.text)
+        });
+    }
+
+    public void StartSession(string text)
+    {
+        networkRunner.StartGame(new StartGameArgs()
+        {
+            GameMode = GameMode.Shared,
+            SessionName = text,
+            OnGameStarted = OnGameStarted,
+            PlayerCount = int.Parse(maxPlayersAllowed.text)
         });
     }
 
     private void OnGameStarted(NetworkRunner runner)
     {
-        Debug.Log("Game started");
+        Debug.Log($"Game started, session name: {runner.SessionInfo.Name}");
+
+        uiManager.SwitchPanel(3);
 
         startSessionButton.interactable = false;
         endSessionButton.interactable = true;
@@ -45,50 +74,56 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
             networkRunner.Shutdown();
         }
 
+        uiManager.SwitchPanel(2);
+
         startSessionButton.interactable = true;
         endSessionButton.interactable = false;
     }
 
-    public async void JoinLobby()
-    {
-        StartGameResult result = await networkRunner.JoinSessionLobby(SessionLobby.Custom, "MainLobby");
-
-        if (result.Ok)
-        {
-            Debug.Log($"Joined Lobby {networkRunner.LobbyInfo.Name}");
-        }
-    }
-
-    public async void JoinLobby(string lobbyName)
+    public async void JoinLobbyAsHost(string lobbyName)
     {
         StartGameResult result = await networkRunner.JoinSessionLobby(SessionLobby.Custom, lobbyName);
 
         if (result.Ok)
         {
-            Debug.Log($"Joined Lobby {networkRunner.LobbyInfo.Name}");
+            uiManager.SwitchPanel(1);
+            Debug.Log($"Joined Lobby: {networkRunner.LobbyInfo.Name}");
         }
     }
 
-    public async void JoinLobby(TextMeshProUGUI text)
+    public void JoinLobbyAsHost(TextMeshProUGUI text)
     {
-        StartGameResult result = await networkRunner.JoinSessionLobby(SessionLobby.Custom, text.text);
+        JoinLobbyAsHost(text.text);
+    }
+
+    public async void JoinLobbyAsGuest(string lobbyName)
+    {
+        StartGameResult result = await networkRunner.JoinSessionLobby(SessionLobby.Custom, lobbyName);
 
         if (result.Ok)
         {
-            Debug.Log($"Joined Lobby {networkRunner.LobbyInfo.Name}");
+            uiManager.SwitchPanel(2);
+            Debug.Log($"Joined Lobby: {networkRunner.LobbyInfo.Name}");
         }
+    }
+
+    public void JoinLobbyAsGuest(TextMeshProUGUI text)
+    {
+        JoinLobbyAsGuest(text.text);
     }
 
     private void RefreshRoomUI()
     {
-        if (networkRunner.IsRunning && !networkRunner.IsShutdown)
-        {
-            sessionPanel.SetActive(true);
-        }
-        else
-        {
-            sessionPanel.SetActive(false);
-        }
+        uiManager.UpdatePlayersConnectedText(networkRunner.SessionInfo.PlayerCount);
+
+        //if (networkRunner.IsRunning && !networkRunner.IsShutdown)
+        //{
+        //    sessionPanel.SetActive(true);
+        //}
+        //else
+        //{
+        //    sessionPanel.SetActive(false);
+        //}
     }
 
     #region RunnerCallBacks
@@ -186,5 +221,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
         {
             Debug.Log($"Session Name: {session.Name}, Player Count: {session.PlayerCount}");
         }
+
+        SessionsListUpdated?.Invoke(sessionList);
     }
 }
