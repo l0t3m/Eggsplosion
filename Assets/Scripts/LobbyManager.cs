@@ -2,6 +2,7 @@ using Fusion;
 using Fusion.Sockets;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,6 +16,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     [SerializeField] private Button endSessionButton;
     [SerializeField] private TextMeshProUGUI maxPlayersAllowed;
     [SerializeField] private UIManager uiManager;
+    [SerializeField] private CharacterSelectionScript characterSelectionScript;
 
     public event Action<List<SessionInfo>> SessionsListUpdated;
 
@@ -62,7 +64,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
         Debug.Log($"Game started, session name: {runner.SessionInfo.Name}");
 
         uiManager.SwitchPanel(3);
-
+        characterSelectionScript.PlayerJoined(networkRunner, networkRunner.ActivePlayers.Count()-1);
         startSessionButton.interactable = false;
         endSessionButton.interactable = true;
     }
