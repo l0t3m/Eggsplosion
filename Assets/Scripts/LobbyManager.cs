@@ -15,6 +15,8 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     [SerializeField] private Button endSessionButton;
     [SerializeField] private TextMeshProUGUI maxPlayersAllowed;
     [SerializeField] private UIManager uiManager;
+    [SerializeField] private HandleStartButtonBehavior startBehavior;
+    //[SerializeField] private DisableComponentIfNotSceneAuthority[] objectsToDisable;
 
     public event Action<List<SessionInfo>> SessionsListUpdated;
 
@@ -112,10 +114,15 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
         JoinLobbyAsGuest(text.text);
     }
 
+    public void StartGame()
+    {
+        startBehavior.StartGame(networkRunner);
+    }
+
     private void RefreshRoomUI()
     {
         uiManager.UpdatePlayersConnectedText(networkRunner.SessionInfo.PlayerCount);
-
+        startBehavior.HandleChangeInSession(networkRunner);
         //if (networkRunner.IsRunning && !networkRunner.IsShutdown)
         //{
         //    sessionPanel.SetActive(true);

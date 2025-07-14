@@ -44,6 +44,6 @@ public class UIManager : MonoBehaviour
 
     public void UpdatePlayersConnectedText(int amount)
     {
-        playersConnectedText.text = $"Players connected: {amount.ToString()}";
+        playersConnectedText.text = $"{amount} connected";
     }
 }
