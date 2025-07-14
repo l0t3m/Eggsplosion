@@ -34,7 +34,13 @@ public class GameManager : MonoBehaviour
     {
         if (networkRunner.IsSharedModeMasterClient)
             await networkRunner.SpawnAsync(readyManager);
+        ReadyManagerInstance.OnReadyCounterReachedMax += MaxPlayersReady;
 
+    }
+
+    private void MaxPlayersReady()
+    {
+        SendChatMessage(-1, "ALL PLAYERS ARE READY");
     }
 
     public void SendReady()
@@ -42,7 +48,7 @@ public class GameManager : MonoBehaviour
         ReadyManagerInstance.RPC_SetReady();
         readyButton.interactable = false;
         
-        //SendChatMessage(-1, $"Player {networkRunner.LocalPlayer.AsIndex} has readied up!"); 
+        SendChatMessage(-1, $"Player {networkRunner.LocalPlayer.AsIndex} has readied up!"); 
     }
 
     public void SendChatMessage(int sender, string message)
