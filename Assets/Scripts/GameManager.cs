@@ -1,4 +1,5 @@
 using Fusion;
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -14,6 +15,10 @@ public class GameManager : MonoBehaviour
     [SerializeField] Button readyButton;
     public TextMeshProUGUI ReadyText;
     [SerializeField] ChatHandler chat;
+    [SerializeField] CharacterSelection characterSelection;
+
+    [SerializeField] Transform[] spawnPoints;
+    [SerializeField] GameObject playerPrefab;
 
     private void Awake()
     {
@@ -24,23 +29,38 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         networkRunner = FindFirstObjectByType<NetworkRunner>();
-        SpawnReadyManagers();
+        StartCoroutine(SpawnReadyManagers());
         ReadyText.text = $"0/{networkRunner.SessionInfo.PlayerCount} ready";
 
 
     }
 
-    private async void SpawnReadyManagers()
+    private IEnumerator SpawnReadyManagers()
     {
-        if (networkRunner.IsSharedModeMasterClient)
-            await networkRunner.SpawnAsync(readyManager);
+        SpawnManager();
+        while (ReadyManagerInstance == null)
+            yield return null;
         ReadyManagerInstance.OnReadyCounterReachedMax += MaxPlayersReady;
 
     }
 
-    private void MaxPlayersReady()
+    private async void SpawnManager()
     {
-        SendChatMessage(-1, "ALL PLAYERS ARE READY");
+        if (networkRunner.IsSharedModeMasterClient)
+            await networkRunner.SpawnAsync(readyManager);
+    }
+
+    private async void MaxPlayersReady()
+    {
+        if (networkRunner.IsSharedModeMasterClient)
+        {
+            SendChatMessage(-1, "ALL PLAYERS ARE READY");
+            for (int i = 0; i < networkRunner.SessionInfo.PlayerCount; i++)
+            {
+                var temp = await networkRunner.SpawnAsync(playerPrefab, spawnPoints[i].position, spawnPoints[i].rotation);
+                temp.GetComponent<Renderer>().material = characterSelection.UIColors[characterSelection.selectedColors[i]];
+            }
+        }
     }
 
     public void SendReady()
@@ -48,11 +68,11 @@ public class GameManager : MonoBehaviour
         ReadyManagerInstance.RPC_SetReady();
         readyButton.interactable = false;
         
-        SendChatMessage(-1, $"Player {networkRunner.LocalPlayer.AsIndex} has readied up!"); 
+        SendChatMessage(-1, $"Player {networkRunner.LocalPlayer.AsIndex} has readied up! [{characterSelection.UIColors[characterSelection.selectedColors[networkRunner.LocalPlayer.AsIndex-1]].name}]"); 
     }
 
     public void SendChatMessage(int sender, string message)
     {
-        chat.RPC_SendChatMessage(sender, message);
+        chat.RPC_SendChatMessageAll(sender, message);
     }
 }
