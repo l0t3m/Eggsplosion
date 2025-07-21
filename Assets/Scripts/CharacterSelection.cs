@@ -38,7 +38,6 @@ public class CharacterSelection : NetworkBehaviour
         do
         {
             mySelectedColor++;
-        Debug.Log(mySelectedColor);
             if (mySelectedColor == UIColors.Length)
                 mySelectedColor = 0;
         } while (selectedColors.Contains(mySelectedColor));

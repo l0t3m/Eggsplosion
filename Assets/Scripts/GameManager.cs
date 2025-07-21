@@ -1,5 +1,6 @@
 using Fusion;
 using System.Collections;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -31,8 +32,6 @@ public class GameManager : MonoBehaviour
         networkRunner = FindFirstObjectByType<NetworkRunner>();
         StartCoroutine(SpawnReadyManagers());
         ReadyText.text = $"0/{networkRunner.SessionInfo.PlayerCount} ready";
-
-
     }
 
     private IEnumerator SpawnReadyManagers()
@@ -41,7 +40,6 @@ public class GameManager : MonoBehaviour
         while (ReadyManagerInstance == null)
             yield return null;
         ReadyManagerInstance.OnReadyCounterReachedMax += MaxPlayersReady;
-
     }
 
     private async void SpawnManager()
@@ -55,11 +53,21 @@ public class GameManager : MonoBehaviour
         if (networkRunner.IsSharedModeMasterClient)
         {
             SendChatMessage(-1, "ALL PLAYERS ARE READY");
-            for (int i = 0; i < networkRunner.SessionInfo.PlayerCount; i++)
+            int index = 0;
+            foreach (var pref in networkRunner.ActivePlayers)
             {
-                var temp = await networkRunner.SpawnAsync(playerPrefab, spawnPoints[i].position, spawnPoints[i].rotation);
-                temp.GetComponent<Renderer>().material = characterSelection.UIColors[characterSelection.selectedColors[i]];
+                var temp = await networkRunner.SpawnAsync(playerPrefab, spawnPoints[index].position, spawnPoints[index].rotation, inputAuthority: pref);
+                var color = characterSelection.UIColors[characterSelection.selectedColors[index]];
+                PlayerLogic pl = temp.GetComponent<PlayerLogic>();
+                pl.RPC_ColorPlayer(color.color);
+                pl.PlayerID = pref.AsIndex;
+                if (pl.PlayerID != networkRunner.LocalPlayer.AsIndex)
+                    temp.ReleaseStateAuthority();
+                index++;
             }
+            networkRunner.Despawn(ReadyText.GetComponent<NetworkObject>());
+            networkRunner.Despawn(readyButton.GetComponent<NetworkObject>());
+            networkRunner.Despawn(characterSelection.transform.parent.GetComponent<NetworkObject>());
         }
     }
 
@@ -75,4 +83,6 @@ public class GameManager : MonoBehaviour
     {
         chat.RPC_SendChatMessageAll(sender, message);
     }
+
+    
 }
