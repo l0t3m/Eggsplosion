@@ -18,7 +18,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] ChatHandler chat;
     [SerializeField] CharacterSelection characterSelection;
 
-    [SerializeField] Transform[] spawnPoints;
+    [SerializeField] Transform[] spawnPointsLocations;
     [SerializeField] GameObject playerPrefab;
 
     private void Awake()
@@ -56,13 +56,12 @@ public class GameManager : MonoBehaviour
             int index = 0;
             foreach (var pref in networkRunner.ActivePlayers)
             {
-                var temp = await networkRunner.SpawnAsync(playerPrefab, spawnPoints[index].position, spawnPoints[index].rotation, inputAuthority: pref);
-                var color = characterSelection.UIColors[characterSelection.selectedColors[index]];
-                PlayerLogic pl = temp.GetComponent<PlayerLogic>();
-                pl.RPC_ColorPlayer(color.color);
+                var player = await networkRunner.SpawnAsync(playerPrefab, spawnPointsLocations[index].position, spawnPointsLocations[index].rotation);
+                PlayerLogic pl = player.GetComponent<PlayerLogic>();
+                pl.RPC_ColorPlayer(characterSelection.UIColors[characterSelection.selectedColors[index]].color);
                 pl.PlayerID = pref.AsIndex;
                 if (pl.PlayerID != networkRunner.LocalPlayer.AsIndex)
-                    temp.ReleaseStateAuthority();
+                    player.ReleaseStateAuthority();
                 index++;
             }
             networkRunner.Despawn(ReadyText.GetComponent<NetworkObject>());

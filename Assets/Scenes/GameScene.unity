@@ -1759,8 +1759,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 12
+  m_fontSizeBase: 12
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -2363,7 +2363,7 @@ MonoBehaviour:
   ReadyText: {fileID: 1077521852}
   chat: {fileID: 1384912184}
   characterSelection: {fileID: 1971466583}
-  spawnPoints:
+  spawnPointsLocations:
   - {fileID: 1703279456}
   - {fileID: 1419007335}
   - {fileID: 71689711}
