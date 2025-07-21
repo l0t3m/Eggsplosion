@@ -145,5 +145,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _PlayerID: 0
   m_renderer: {fileID: 1077343674572526574}
-  rb: {fileID: 0}
   bullet: {fileID: -2030733410391284155, guid: dc8f00432c135184cbf3fb74c88c3f01, type: 3}

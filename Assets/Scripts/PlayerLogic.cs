@@ -65,7 +65,7 @@ public class PlayerLogic : NetworkBehaviour, IStateAuthorityChanged
 
                 Vector3 worldPos = Camera.main.ScreenToWorldPoint(mouseScreenPos);
                 Vector3 direction = (worldPos - origin).normalized;
-                RPC_Shoot(origin, direction, transform.rotation);
+                RPC_Shoot(Object.Id ,origin, direction, transform.rotation);
             }
 
             if (move != Vector3.zero)
@@ -74,10 +74,15 @@ public class PlayerLogic : NetworkBehaviour, IStateAuthorityChanged
     }
 
     [Rpc]
-    private async void RPC_Shoot(Vector3 origin, Vector3 direction, Quaternion rotation)
+    private async void RPC_Shoot(NetworkId shooter, Vector3 origin, Vector3 direction, Quaternion rotation)
     {
-        var obj = await runner.SpawnAsync(bullet, origin, rotation);
-        obj.GetComponent<BulletLogic>().direction = direction;
+        if (runner.IsSharedModeMasterClient)
+        {
+            var obj = await runner.SpawnAsync(bullet, origin, rotation);
+            BulletLogic bl = obj.GetComponent<BulletLogic>();
+            bl.Direction = direction;
+            bl.ShooterObjectID = shooter;
+        }
     }
 
     [Rpc]
