@@ -16,6 +16,8 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     [SerializeField] private TextMeshProUGUI maxPlayersAllowed;
     [SerializeField] private UIManager uiManager;
     [SerializeField] private HandleStartButtonBehavior startBehavior;
+    [SerializeField] private Toggle publicToggleField;
+    [SerializeField] private TextMeshProUGUI privacyText;
     //[SerializeField] private DisableComponentIfNotSceneAuthority[] objectsToDisable;
 
     public event Action<List<SessionInfo>> SessionsListUpdated;
@@ -33,7 +35,8 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
             GameMode = GameMode.Shared,
             SessionName = "GameID",
             OnGameStarted = OnGameStarted,
-            PlayerCount = int.Parse(maxPlayersAllowed.text)
+            PlayerCount = int.Parse(maxPlayersAllowed.text),
+            IsVisible = publicToggleField.isOn
         });
     }
 
@@ -44,7 +47,8 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
             GameMode = GameMode.Shared,
             SessionName = text.text,
             OnGameStarted = OnGameStarted,
-            PlayerCount = int.Parse(maxPlayersAllowed.text)
+            PlayerCount = int.Parse(maxPlayersAllowed.text),
+            IsVisible = publicToggleField.isOn
         });
     }
 
@@ -67,6 +71,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
 
         startSessionButton.interactable = false;
         endSessionButton.interactable = true;
+        privacyText.text = runner.SessionInfo.IsVisible ? "Public lobby" : "Private lobby";
     }
 
     public void EndSession()

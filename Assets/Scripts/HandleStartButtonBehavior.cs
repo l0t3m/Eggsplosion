@@ -18,6 +18,7 @@ public class HandleStartButtonBehavior : MonoBehaviour
     {
         if (nr.IsSceneAuthority && nr.SessionInfo.PlayerCount > 1)
         {
+            nr.SessionInfo.IsOpen = false;           
             await nr.LoadScene("GameScene");
         }
     }
