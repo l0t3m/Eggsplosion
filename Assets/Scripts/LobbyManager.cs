@@ -141,6 +141,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     #region RunnerCallBacks
     public void OnConnectFailed(NetworkRunner runner, NetAddress remoteAddress, NetConnectFailedReason reason)
     {
+        Debug.LogWarning("Cant join this server!");
     }
 
     public void OnConnectRequest(NetworkRunner runner, NetworkRunnerCallbackArgs.ConnectRequest request, byte[] token)
@@ -153,6 +154,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason)
     {
+        Debug.LogWarning("You got disconnected!");
     }
 
     public void OnHostMigration(NetworkRunner runner, HostMigrationToken hostMigrationToken)

@@ -82,6 +82,7 @@ public class PlayerLogic : NetworkBehaviour, IStateAuthorityChanged
             BulletLogic bl = obj.GetComponent<BulletLogic>();
             bl.Direction = direction;
             bl.ShooterObjectID = shooter;
+            bl.Object.ReleaseStateAuthority();
         }
     }
 

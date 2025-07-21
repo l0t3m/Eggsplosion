@@ -8,15 +8,24 @@ public class BulletLogic : NetworkBehaviour
     [HideInInspector] public Vector3 Direction { get; set; }
     [Networked]
     [HideInInspector] public NetworkId ShooterObjectID { get; set; }
-    [SerializeField] private NetworkRigidbody3D rb;
+    [SerializeField] private Rigidbody rb;
+
+    public override void Spawned()
+    {
+        base.Spawned();
+        Object.RequestStateAuthority();
+    }
 
     public override void FixedUpdateNetwork()
     {
         base.FixedUpdateNetwork();
+        if (!HasStateAuthority)
+            return;
+
         if (Direction != null)
         {
             if (Direction != Vector3.zero)
-                rb.Rigidbody.AddForce(Direction * 100, ForceMode.Force);
+                rb.AddForce(Direction * 250, ForceMode.Force);
         }
     }
 

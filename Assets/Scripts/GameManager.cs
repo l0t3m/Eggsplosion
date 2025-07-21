@@ -57,6 +57,7 @@ public class GameManager : MonoBehaviour
             foreach (var pref in networkRunner.ActivePlayers)
             {
                 var player = await networkRunner.SpawnAsync(playerPrefab, spawnPointsLocations[index].position, spawnPointsLocations[index].rotation);
+                Debug.Log(player.name);
                 PlayerLogic pl = player.GetComponent<PlayerLogic>();
                 pl.RPC_ColorPlayer(characterSelection.UIColors[characterSelection.selectedColors[index]].color);
                 pl.PlayerID = pref.AsIndex;
