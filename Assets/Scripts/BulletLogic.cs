@@ -1,5 +1,6 @@
 using Fusion;
 using Fusion.Addons.Physics;
+using System.Collections;
 using UnityEngine;
 
 public class BulletLogic : NetworkBehaviour
@@ -7,25 +8,40 @@ public class BulletLogic : NetworkBehaviour
     [Networked]
     [HideInInspector] public Vector3 Direction { get; set; }
     [Networked]
-    [HideInInspector] public NetworkId ShooterObjectID { get; set; }
+    [HideInInspector] public int ShooterID { get; set; } = -1;
+    [Networked]
+    [HideInInspector] public NetworkId ShooterObjectId { get; set; }
+
     [SerializeField] private Rigidbody rb;
 
     public override void Spawned()
     {
         base.Spawned();
-        Object.RequestStateAuthority();
+        
+        StartCoroutine(ClaimBullet());
+    }
+
+    private IEnumerator ClaimBullet()
+    {
+        if (ShooterID != -1)
+        {
+            transform.LookAt(Direction);
+            rb.AddForce(Direction * 19f, ForceMode.Impulse);
+            yield return null;
+        }
+        else
+            yield return new WaitForSeconds(0.01f);
     }
 
     public override void FixedUpdateNetwork()
     {
         base.FixedUpdateNetwork();
-        if (!HasStateAuthority)
-            return;
+
 
         if (Direction != null)
         {
             if (Direction != Vector3.zero)
-                rb.AddForce(Direction * 250, ForceMode.Force);
+                transform.position += Direction*1.5f;
         }
     }
 
@@ -33,16 +49,20 @@ public class BulletLogic : NetworkBehaviour
     {
         if (collision.transform.tag == "Player")
         {
-            if (collision.transform.GetComponent<NetworkObject>().Id != ShooterObjectID)
-                RPC_DestroyMe();
+            
+            RPC_DestroyMe(collision.gameObject.GetComponent<NetworkObject>().Id);
         }
     }
 
     [Rpc]
-    public void RPC_DestroyMe()
+    public void RPC_DestroyMe(NetworkId pushMe)
     {
-        var runner = FindFirstObjectByType<NetworkRunner>();
+        NetworkRunner runner = FindFirstObjectByType<NetworkRunner>();
+        if (runner.TryFindObject(pushMe, out NetworkObject objectToPush))
+            objectToPush.GetComponent<Rigidbody>().AddForce(Direction * 15, ForceMode.Impulse);
         if (runner.IsSharedModeMasterClient)
-            runner.Despawn(GetComponent<NetworkObject>());
+        {
+            runner.Despawn(Object);
+        }
     }
 }

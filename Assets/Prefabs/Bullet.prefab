@@ -14,8 +14,8 @@ GameObject:
   - component: {fileID: 7240320658192738739}
   - component: {fileID: -2030733410391284155}
   - component: {fileID: 8823638788709231957}
-  - component: {fileID: 1123776894819648152}
-  - component: {fileID: 7445924223234651625}
+  - component: {fileID: 2053980453685182928}
+  - component: {fileID: -7015348174263676180}
   m_Layer: 0
   m_Name: Bullet
   m_TagString: Untagged
@@ -128,11 +128,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   SortKey: 3899021340
   ObjectInterest: 1
-  Flags: 786433
+  Flags: 131073
   NestedObjects: []
   NetworkedBehaviours:
   - {fileID: 8823638788709231957}
-  - {fileID: 7445924223234651625}
+  - {fileID: -7015348174263676180}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &8823638788709231957
 MonoBehaviour:
@@ -146,9 +146,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9fdf412ea25b72b40a79bab63560de36, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _direction: {x: 0, y: 0, z: 0}
-  rb: {fileID: 1123776894819648152}
---- !u!54 &1123776894819648152
+  _Direction: {x: 0, y: 0, z: 0}
+  _ShooterID: -1
+  _ShooterObjectId:
+    Raw: 0
+  rb: {fileID: 2053980453685182928}
+--- !u!54 &2053980453685182928
 Rigidbody:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -171,11 +174,11 @@ Rigidbody:
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
   m_UseGravity: 0
-  m_IsKinematic: 0
+  m_IsKinematic: 1
   m_Interpolate: 1
-  m_Constraints: 0
+  m_Constraints: 116
   m_CollisionDetection: 1
---- !u!114 &7445924223234651625
+--- !u!114 &-7015348174263676180
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

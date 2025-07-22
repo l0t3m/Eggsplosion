@@ -15,6 +15,10 @@ public class PlayerLogic : NetworkBehaviour, IStateAuthorityChanged
     private NetworkRunner runner;
 
     [SerializeField] private NetworkObject bullet;
+    [SerializeField] private Rigidbody rb;
+
+    private float maxShootTime = 1.5f;
+    private float actualShootTime = 0;
 
     public override void Spawned()
     {
@@ -42,6 +46,7 @@ public class PlayerLogic : NetworkBehaviour, IStateAuthorityChanged
     public override void FixedUpdateNetwork()
     {
         base.FixedUpdateNetwork();
+        actualShootTime -= Time.fixedDeltaTime;
         if (runner != null)
         {
             if (!Object.HasStateAuthority)
@@ -57,32 +62,33 @@ public class PlayerLogic : NetworkBehaviour, IStateAuthorityChanged
                 move += Vector3.right;
             if (Keyboard.current.aKey.isPressed)
                 move -= Vector3.right;
-            if (Mouse.current.leftButton.isPressed)
+            if (Mouse.current.leftButton.isPressed && actualShootTime <= 0)
             {
                 Vector3 origin = transform.position;
                 Vector3 mouseScreenPos = Mouse.current.position.ReadValue();
-                mouseScreenPos.z = 12.75f; // Distance from camera to world point
+                mouseScreenPos.z = 12.75f;
 
                 Vector3 worldPos = Camera.main.ScreenToWorldPoint(mouseScreenPos);
                 Vector3 direction = (worldPos - origin).normalized;
-                RPC_Shoot(Object.Id ,origin, direction, transform.rotation);
+                actualShootTime = maxShootTime;
+                RPC_Shoot(runner.LocalPlayer.PlayerId, Object.Id, origin, direction, transform.rotation);
             }
 
             if (move != Vector3.zero)
-                transform.position += move;
+                rb.AddForce(move, ForceMode.VelocityChange);
         }
     }
 
     [Rpc]
-    private async void RPC_Shoot(NetworkId shooter, Vector3 origin, Vector3 direction, Quaternion rotation)
+    private async void RPC_Shoot(int shooter, NetworkId objID, Vector3 origin, Vector3 direction, Quaternion rotation)
     {
         if (runner.IsSharedModeMasterClient)
         {
-            var obj = await runner.SpawnAsync(bullet, origin, rotation);
+            var obj = await runner.SpawnAsync(bullet, origin+direction*1.5f, rotation);
             BulletLogic bl = obj.GetComponent<BulletLogic>();
             bl.Direction = direction;
-            bl.ShooterObjectID = shooter;
-            bl.Object.ReleaseStateAuthority();
+            bl.ShooterID = shooter;
+            bl.ShooterObjectId = objID;
         }
     }
 
@@ -98,7 +104,4 @@ public class PlayerLogic : NetworkBehaviour, IStateAuthorityChanged
     {
         runner = FindFirstObjectByType<NetworkRunner>();
     }
-
-    
-   
 }
