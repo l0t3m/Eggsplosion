@@ -14,11 +14,14 @@ public class BulletLogic : NetworkBehaviour
 
     [SerializeField] private Rigidbody rb;
 
+    private float timeToDespawn;
+
     public override void Spawned()
     {
         base.Spawned();
         
         StartCoroutine(ClaimBullet());
+        timeToDespawn = 5;
     }
 
     private IEnumerator ClaimBullet()
@@ -43,6 +46,11 @@ public class BulletLogic : NetworkBehaviour
             if (Direction != Vector3.zero)
                 transform.position += Direction*1.5f;
         }
+
+        timeToDespawn -= Time.fixedDeltaTime;
+        if (timeToDespawn <= 0)
+            RPC_DestroyMe();
+
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -59,10 +67,19 @@ public class BulletLogic : NetworkBehaviour
     {
         NetworkRunner runner = FindFirstObjectByType<NetworkRunner>();
         if (runner.TryFindObject(pushMe, out NetworkObject objectToPush))
-            objectToPush.GetComponent<Rigidbody>().AddForce(Direction * 15, ForceMode.Impulse);
-        if (runner.IsSharedModeMasterClient)
         {
-            runner.Despawn(Object);
+            if (Vector3.Distance(objectToPush.transform.position, Object.transform.position) < 5)
+                objectToPush.GetComponent<Rigidbody>().AddForce(Direction * 15, ForceMode.Impulse);
         }
+        if (runner.IsSharedModeMasterClient)
+            runner.Despawn(Object);
+    }
+
+    [Rpc]
+    public void RPC_DestroyMe()
+    {
+        NetworkRunner runner = FindFirstObjectByType<NetworkRunner>();
+        if (runner.IsSharedModeMasterClient)
+            runner.Despawn(Object);
     }
 }

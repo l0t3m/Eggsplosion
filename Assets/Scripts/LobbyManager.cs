@@ -18,6 +18,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     [SerializeField] private HandleStartButtonBehavior startBehavior;
     [SerializeField] private Toggle publicToggleField;
     [SerializeField] private TextMeshProUGUI privacyText;
+    [SerializeField] private HandleDisconnect disconnectionPanel;
     //[SerializeField] private DisableComponentIfNotSceneAuthority[] objectsToDisable;
 
     public event Action<List<SessionInfo>> SessionsListUpdated;
@@ -40,9 +41,9 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
         });
     }
 
-    public void StartSession(TextMeshProUGUI text)
+    public async void StartSession(TextMeshProUGUI text)
     {
-        networkRunner.StartGame(new StartGameArgs()
+        var res = await networkRunner.StartGame(new StartGameArgs()
         {
             GameMode = GameMode.Shared,
             SessionName = text.text,
@@ -50,17 +51,21 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
             PlayerCount = int.Parse(maxPlayersAllowed.text),
             IsVisible = publicToggleField.isOn
         });
+        if (!res.Ok)
+            PlayerDisconnected(res.ShutdownReason.ToString());
     }
 
-    public void StartSession(string text)
+    public async void StartSession(string text)
     {
-        networkRunner.StartGame(new StartGameArgs()
+        var res = await networkRunner.StartGame(new StartGameArgs()
         {
             GameMode = GameMode.Shared,
             SessionName = text,
             OnGameStarted = OnGameStarted,
             PlayerCount = int.Parse(maxPlayersAllowed.text)
         });
+        if (!res.Ok)
+            PlayerDisconnected(res.ShutdownReason.ToString());
     }
 
     private void OnGameStarted(NetworkRunner runner)
@@ -141,20 +146,24 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     #region RunnerCallBacks
     public void OnConnectFailed(NetworkRunner runner, NetAddress remoteAddress, NetConnectFailedReason reason)
     {
-        Debug.LogWarning("Cant join this server!");
+        PlayerDisconnected(reason.ToString());
     }
+
+    
 
     public void OnConnectRequest(NetworkRunner runner, NetworkRunnerCallbackArgs.ConnectRequest request, byte[] token)
     {
+
     }
 
     public void OnCustomAuthenticationResponse(NetworkRunner runner, Dictionary<string, object> data)
     {
+      
     }
 
     public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason)
     {
-        Debug.LogWarning("You got disconnected!");
+        PlayerDisconnected(reason.ToString());
     }
 
     public void OnHostMigration(NetworkRunner runner, HostMigrationToken hostMigrationToken)
@@ -190,6 +199,12 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     }
     #endregion
 
+
+    private void PlayerDisconnected(string reason)
+    {
+        disconnectionPanel.gameObject.SetActive(true);
+        disconnectionPanel.OnDisconnect(reason);
+    }
     public void OnObjectEnterAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player)
     {
     }
