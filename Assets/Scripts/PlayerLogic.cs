@@ -11,11 +11,12 @@ public class PlayerLogic : NetworkBehaviour, IStateAuthorityChanged
 {
     [Networked]
     [HideInInspector] public int PlayerID { get; set; }
-    [SerializeField] private MeshRenderer m_renderer;
     private NetworkRunner runner;
 
+    [SerializeField] private SkinnedMeshRenderer m_renderer;
     [SerializeField] private NetworkObject bullet;
     [SerializeField] private Rigidbody rb;
+    [SerializeField] private Animator animator;
 
     private float maxShootTime = 1.5f;
     private float actualShootTime = 0;
@@ -71,12 +72,22 @@ public class PlayerLogic : NetworkBehaviour, IStateAuthorityChanged
                 Vector3 worldPos = Camera.main.ScreenToWorldPoint(mouseScreenPos);
                 Vector3 direction = (worldPos - origin).normalized;
                 actualShootTime = maxShootTime;
+                animator.SetBool("Throwing", true);
+                StartCoroutine(StopAnim("Throwing"));
                 RPC_Shoot(runner.LocalPlayer.PlayerId, Object.Id, origin, direction, transform.rotation);
+                
             }
 
             if (move != Vector3.zero)
                 rb.AddForce(move, ForceMode.VelocityChange);
+            animator.SetFloat("Speed", rb.linearVelocity.magnitude);
         }
+    }
+
+    private IEnumerator StopAnim(string anim)
+    {
+        yield return new WaitForSeconds(2);
+        animator.SetBool(anim, false);
     }
 
     [Rpc]
