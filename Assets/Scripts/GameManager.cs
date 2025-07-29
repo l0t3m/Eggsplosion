@@ -31,7 +31,7 @@ public class GameManager : MonoBehaviour
     {
         networkRunner = FindFirstObjectByType<NetworkRunner>();
         StartCoroutine(SpawnReadyManagers());
-        ReadyText.text = $"0/{networkRunner.SessionInfo.PlayerCount} ready";
+        ReadyText.text = $"0/{networkRunner.SessionInfo.PlayerCount-1} ready";
     }
 
     private IEnumerator SpawnReadyManagers()
@@ -44,25 +44,21 @@ public class GameManager : MonoBehaviour
 
     private async void SpawnManager()
     {
-        if (networkRunner.IsSharedModeMasterClient)
+        if (networkRunner.IsServer)
             await networkRunner.SpawnAsync(readyManager);
     }
 
     private async void MaxPlayersReady()
     {
-        if (networkRunner.IsSharedModeMasterClient)
+        if (networkRunner.IsServer)
         {
             SendChatMessage(-1, "ALL PLAYERS ARE READY");
             int index = 0;
             foreach (var pref in networkRunner.ActivePlayers)
             {
-                var player = await networkRunner.SpawnAsync(playerPrefab, spawnPointsLocations[index].position, spawnPointsLocations[index].rotation);
-                Debug.Log(player.name);
+                var player = await networkRunner.SpawnAsync(playerPrefab, spawnPointsLocations[index].position, spawnPointsLocations[index].rotation, inputAuthority:pref);
                 PlayerLogic pl = player.GetComponent<PlayerLogic>();
-                pl.RPC_ColorPlayer(characterSelection.UIColors[characterSelection.selectedColors[index]].color);
-                pl.PlayerID = pref.AsIndex;
-                if (pl.PlayerID != networkRunner.LocalPlayer.AsIndex)
-                    player.ReleaseStateAuthority();
+                pl.RPC_ColorPlayer(characterSelection.UIColors[characterSelection.selectedColors[index]].color);              
                 index++;
             }
             networkRunner.Despawn(ReadyText.GetComponent<NetworkObject>());

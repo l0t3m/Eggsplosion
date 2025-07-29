@@ -13,7 +13,7 @@ public class ChatHandler : NetworkBehaviour
     [Rpc]
     public void RPC_SendChatMessage(int sender, int target, string messsage, RpcInfo info = default)
     {
-        if (FindFirstObjectByType<NetworkRunner>().LocalPlayer.AsIndex == target+1)
+        if (Object.Runner.LocalPlayer.AsIndex == target+1)
             GetComponent<TextMeshProUGUI>().text += $"[{(sender == -1 ? "SERVER" : $"Player {sender + 1}")}]: {messsage}\n";
     }
 }

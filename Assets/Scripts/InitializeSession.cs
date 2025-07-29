@@ -13,7 +13,7 @@ public class InitializeSession : MonoBehaviour
     public void Initialize(SessionInfo sessionInfo)
     {
         sessionName.text = sessionInfo.Name;
-        sessionAmount.text = $"{sessionInfo.PlayerCount.ToString()}/{sessionInfo.MaxPlayers.ToString()}";
+        sessionAmount.text = $"{sessionInfo.PlayerCount-1}/{sessionInfo.MaxPlayers-1}";
     }
 
     public void Join()

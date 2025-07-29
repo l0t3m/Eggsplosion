@@ -8,7 +8,7 @@ public class HandleStartButtonBehavior : MonoBehaviour
 
     public void HandleChangeInSession(NetworkRunner nr)
     {
-        if (nr.IsSceneAuthority && nr.SessionInfo.PlayerCount > 1)
+        if (nr.IsServer && nr.SessionInfo.PlayerCount > 1)
             startButton.interactable = true;
         else
             startButton.interactable = false;
@@ -16,7 +16,7 @@ public class HandleStartButtonBehavior : MonoBehaviour
 
     public async void StartGame(NetworkRunner nr)
     {
-        if (nr.IsSceneAuthority && nr.SessionInfo.PlayerCount > 1)
+        if (nr.IsServer && nr.SessionInfo.PlayerCount > 1)
         {
             nr.SessionInfo.IsOpen = false;           
             await nr.LoadScene("GameScene");
