@@ -58,7 +58,7 @@ public class GameManager : MonoBehaviour
             {
                 var player = await networkRunner.SpawnAsync(playerPrefab, spawnPointsLocations[index].position, spawnPointsLocations[index].rotation, inputAuthority:pref);
                 PlayerLogic pl = player.GetComponent<PlayerLogic>();
-                pl.RPC_ColorPlayer(characterSelection.UIColors[characterSelection.selectedColors[index]].color);              
+                pl.RPC_ColorPlayer(characterSelection.UIColors[characterSelection.selectedColors[index + 1]].color);              
                 index++;
             }
             networkRunner.Despawn(ReadyText.GetComponent<NetworkObject>());
@@ -80,5 +80,8 @@ public class GameManager : MonoBehaviour
         chat.RPC_SendChatMessageAll(sender, message);
     }
 
-    
+    public void PlayerWon(PlayerRef pRef)
+    {
+        SendChatMessage(-1, $"{pRef.PlayerId} has won!");
+    }
 }

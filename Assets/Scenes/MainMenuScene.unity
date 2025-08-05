@@ -530,7 +530,7 @@ RectTransform:
   m_Father: {fileID: 988121418}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -1187,9 +1187,9 @@ RectTransform:
   m_Father: {fileID: 1978148504}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: -17, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &393858761
 MonoBehaviour:
@@ -3113,7 +3113,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 252ac9fdc80da4b42be25067a64e8c08, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  networkRunner: {fileID: 1136559098}
   sessionPanel: {fileID: 1877576494}
   startSessionButton: {fileID: 1134436778}
   endSessionButton: {fileID: 1469720058}
@@ -3479,68 +3478,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1134436776}
   m_CullTransparentMesh: 1
---- !u!1 &1136559096
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1136559097}
-  - component: {fileID: 1136559098}
-  - component: {fileID: 1136559099}
-  m_Layer: 0
-  m_Name: NetworkRunner
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1136559097
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1136559096}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 903.23035, y: 571.1695, z: -1131.3164}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1136559098
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1136559096}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: -1199893898, guid: e725a070cec140c4caffb81624c8c787, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &1136559099
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1136559096}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7b5a1ff9dee264bfd829a39e6542dcbd, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _physicsAuthority: 2
-  _physicsTiming: 3
-  ClientPhysicsSimulation: 0
-  DeltaTimeMultiplier: 1
-  SetUnityFixedTimestep: 0
 --- !u!1 &1242490426
 GameObject:
   m_ObjectHideFlags: 0
@@ -3807,7 +3744,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1309416210
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4032,7 +3969,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1366411689
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5195,7 +5132,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   sessionPrefab: {fileID: 405188432833141260, guid: 80fb602781e7d9a4584e57d1f80d8658, type: 3}
   lobbyManager: {fileID: 1075906631}
-  networkRunner: {fileID: 1136559098}
+  networkRunner: {fileID: 0}
   sessionsParent: {fileID: 1606523068}
 --- !u!1 &1606523068
 GameObject:
@@ -5232,7 +5169,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0.00048828125}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: -1273, y: -450}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1606523070
 MonoBehaviour:
@@ -7623,4 +7560,3 @@ SceneRoots:
   - {fileID: 832575519}
   - {fileID: 1044162798}
   - {fileID: 1265572254}
-  - {fileID: 1136559097}

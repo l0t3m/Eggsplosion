@@ -8,11 +8,10 @@ using UnityEngine.UI;
 
 public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
 {
-    [SerializeField] NetworkRunner networkRunner;
+    private NetworkRunner networkRunner;
 
     [SerializeField] private GameObject sessionPanel;
     [SerializeField] private Button startSessionButton;
-    [SerializeField] private Button endSessionButton;
     [SerializeField] private TextMeshProUGUI maxPlayersAllowed;
     [SerializeField] private UIManager uiManager;
     [SerializeField] private HandleStartButtonBehavior startBehavior;
@@ -25,8 +24,8 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
 
     void Start()
     {
+        networkRunner = NetworkRunnerSpawner.SpawnNetworkRunner();
         networkRunner.AddCallbacks(this);
-        endSessionButton.interactable = false;
 #if UNITY_SERVER
         StartSessionServer();
 #endif
@@ -85,8 +84,10 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
 
         uiManager.SwitchPanel(2);
 
+        Destroy(networkRunner.gameObject);
+        networkRunner = NetworkRunnerSpawner.SpawnNetworkRunner();
+
         startSessionButton.interactable = true;
-        endSessionButton.interactable = false;
     }
 
     public async void JoinLobbyAsHost(string lobbyName)
@@ -141,10 +142,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     }
 
     #region RunnerCallBacks
-    public void OnConnectFailed(NetworkRunner runner, NetAddress remoteAddress, NetConnectFailedReason reason)
-    {
-        PlayerDisconnected(reason.ToString());
-    }
+   
 
     
 
@@ -156,11 +154,6 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     public void OnCustomAuthenticationResponse(NetworkRunner runner, Dictionary<string, object> data)
     {
       
-    }
-
-    public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason)
-    {
-        PlayerDisconnected(reason.ToString());
     }
 
     public void OnHostMigration(NetworkRunner runner, HostMigrationToken hostMigrationToken)
@@ -196,11 +189,25 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     }
     #endregion
 
+    public void OnConnectFailed(NetworkRunner runner, NetAddress remoteAddress, NetConnectFailedReason reason)
+    {
+        PlayerDisconnected(reason.ToString());
+        Destroy(networkRunner.gameObject);
+        networkRunner = NetworkRunnerSpawner.SpawnNetworkRunner();
+    }
+    public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason)
+    {
+        PlayerDisconnected(reason.ToString());
+        Destroy(networkRunner.gameObject);
+        networkRunner = NetworkRunnerSpawner.SpawnNetworkRunner();
+    }
 
     private void PlayerDisconnected(string reason)
     {
         disconnectionPanel.gameObject.SetActive(true);
         disconnectionPanel.OnDisconnect(reason);
+        Destroy(networkRunner.gameObject);
+        networkRunner = NetworkRunnerSpawner.SpawnNetworkRunner();
     }
     public void OnObjectEnterAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player)
     {
@@ -230,12 +237,18 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
 
         Debug.Log($"{player.PlayerId} left");
         RefreshRoomUI();
-
+        if (player.PlayerId == networkRunner.LocalPlayer.PlayerId)
+        {
+            Destroy(networkRunner.gameObject);
+            networkRunner = NetworkRunnerSpawner.SpawnNetworkRunner();
+        }
     }
 
     public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)
     {
         RefreshRoomUI();
+        Destroy(networkRunner.gameObject);
+        networkRunner = NetworkRunnerSpawner.SpawnNetworkRunner();
     }
 
     public void OnConnectedToServer(NetworkRunner runner)

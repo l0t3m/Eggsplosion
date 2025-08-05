@@ -37,15 +37,15 @@ public class PlayerLogic : NetworkBehaviour, INetworkRunnerCallbacks
     public override void FixedUpdateNetwork()
     {
         base.FixedUpdateNetwork();
+        actualShootTime -= Time.fixedDeltaTime;
         if (GetInput(out InputStruct data))
         {
             animator.SetFloat("Speed", rb.linearVelocity.magnitude);
             if (Runner.IsServer)
             {
                 rb.AddForce(data.MoveDirection, ForceMode.VelocityChange);
-                actualShootTime -= Time.fixedDeltaTime;
                 if (data.DidShoot)
-                    RPC_Shoot(data.ShooterID, Object.Id, rb.transform.position, data.ShootDirection, transform.rotation);
+                    RPC_Shoot(Object.Id, rb.transform.position, data.ShootDirection, transform.rotation);
             }
         }
     }
@@ -57,11 +57,11 @@ public class PlayerLogic : NetworkBehaviour, INetworkRunnerCallbacks
     }
 
     [Rpc(sources: RpcSources.All, targets: RpcTargets.StateAuthority)]
-    private async void RPC_Shoot(int shooter, NetworkId objID, Vector3 origin, Vector3 direction, Quaternion rotation)
+    private async void RPC_Shoot(NetworkId objID, Vector3 origin, Vector3 direction, Quaternion rotation)
     {
         if (Object.Runner.IsServer)
         {
-            var obj = await Object.Runner.SpawnAsync(bullet, origin+direction*1.5f, rotation);
+            var obj = await Object.Runner.SpawnAsync(bullet, origin+(direction*5f), rotation);
             BulletLogic bl = obj.GetComponent<BulletLogic>();
             bl.Direction = direction;
             bl.ShooterObjectId = objID;
@@ -162,7 +162,8 @@ public class PlayerLogic : NetworkBehaviour, INetworkRunnerCallbacks
             animator.SetBool("Throwing", true);
             StartCoroutine(StopAnim("Throwing"));
         }
-
+        else
+            data.DidShoot = false;
         data.MoveDirection = move;
         input.Set(data);
     }
