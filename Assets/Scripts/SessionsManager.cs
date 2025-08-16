@@ -7,7 +7,6 @@ public class SessionsManager : MonoBehaviour
 {
     [SerializeField] InitializeSession sessionPrefab;
     [SerializeField] LobbyManager lobbyManager;
-    [SerializeField] NetworkRunner networkRunner;
     [SerializeField] GameObject sessionsParent;
 
     private void Start()
@@ -19,11 +18,14 @@ public class SessionsManager : MonoBehaviour
     {
         foreach (SessionInfo session in sessions)
         {
-            InitializeSession sessionobj = Instantiate<InitializeSession>(sessionPrefab);
-            sessionobj.transform.parent = sessionsParent.transform;
-            sessionobj.Initialize(session);
+            if (session.IsValid && session.IsOpen)
+            {
+                InitializeSession sessionobj = Instantiate<InitializeSession>(sessionPrefab);
+                sessionobj.transform.parent = sessionsParent.transform;
+                sessionobj.Initialize(session);
 
-            sessionobj.OnJoinPressed += JoinSessionPressed;
+                sessionobj.OnJoinPressed += JoinSessionPressed;
+            }
         }
     }
 

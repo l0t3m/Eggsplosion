@@ -33,10 +33,11 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
 
     private void StartSessionServer()
     {
+        System.Random rnd = new System.Random();
         networkRunner.StartGame(new StartGameArgs()
         {
             GameMode = GameMode.Server,
-            SessionName = "GameID",
+            SessionName = rnd.Next().ToString(),
             OnGameStarted = OnGameStarted,
             CustomLobbyName = "EU",
             PlayerCount = 2,

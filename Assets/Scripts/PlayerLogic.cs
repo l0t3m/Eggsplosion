@@ -27,11 +27,16 @@ public class PlayerLogic : NetworkBehaviour, INetworkRunnerCallbacks
     private float maxShootTime = 1.5f;
     private float actualShootTime = 0;
 
+    private InputAction moveAction;
+    private InputAction attackAction;
+
     public override void Spawned()
     {
         base.Spawned();
         Runner.AddCallbacks(this);
         Runner.ProvideInput = true;
+        moveAction = InputSystem.actions.FindAction("Move");
+        attackAction = InputSystem.actions.FindAction("Attack");
     }
 
     public override void FixedUpdateNetwork()
@@ -139,7 +144,7 @@ public class PlayerLogic : NetworkBehaviour, INetworkRunnerCallbacks
         Vector3 move = Vector3.zero;
         InputStruct data = new InputStruct();
 
-        if (Keyboard.current.wKey.isPressed)
+        /*if (Keyboard.current.wKey.isPressed)
             move += Vector3.forward;
         if (Keyboard.current.sKey.isPressed)
             move -= Vector3.forward;
@@ -147,7 +152,31 @@ public class PlayerLogic : NetworkBehaviour, INetworkRunnerCallbacks
             move += Vector3.right;
         if (Keyboard.current.aKey.isPressed)
             move -= Vector3.right;
-        if (Mouse.current.leftButton.isPressed && actualShootTime <= 0)
+        
+        
+       if (Mouse.current.leftButton.isPressed && actualShootTime <= 0)
+        {
+            Vector3 origin = transform.position;
+            Vector3 mouseScreenPos = Mouse.current.position.ReadValue();
+            mouseScreenPos.z = 12.75f;
+
+            Vector3 worldPos = Camera.main.ScreenToWorldPoint(mouseScreenPos);
+            Vector3 direction = (worldPos - origin).normalized;
+            actualShootTime = maxShootTime;
+            data.DidShoot = true;
+            data.ShootDirection = direction;
+            data.ShooterID = Runner.LocalPlayer.PlayerId;
+            animator.SetBool("Throwing", true);
+            StartCoroutine(StopAnim("Throwing"));
+        }
+        else
+            data.DidShoot = false;
+        */
+        Vector2 moveVector = moveAction.ReadValue<Vector2>();
+        if (moveVector.magnitude > 0)
+            move = new Vector3(moveVector.x, 0, moveVector.y);
+
+        if (attackAction.WasPressedThisFrame())
         {
             Vector3 origin = transform.position;
             Vector3 mouseScreenPos = Mouse.current.position.ReadValue();

@@ -83,5 +83,17 @@ public class GameManager : MonoBehaviour
     public void PlayerWon(PlayerRef pRef)
     {
         SendChatMessage(-1, $"{pRef.PlayerId} has won!");
+        StartCoroutine(nameof(EndGame));
+    }
+
+    private IEnumerator EndGame()
+    {
+        if (networkRunner.IsServer)
+        {
+            yield return new WaitForSeconds(3);
+            networkRunner.LoadScene("MainMenuScene");
+        }
+        
+        yield return null;
     }
 }
