@@ -22,6 +22,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public event Action<List<SessionInfo>> SessionsListUpdated;
 
+    const string CON_STR = "Connecting...";
     void Start()
     {
         networkRunner = NetworkRunnerSpawner.SpawnNetworkRunner();
@@ -121,6 +122,11 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     public void JoinLobbyAsGuest(TextMeshProUGUI text)
     {
         JoinLobbyAsGuest(text.text);
+    }
+
+    public void RenameButtonToPending(TextMeshProUGUI text)
+    {
+        text.text = CON_STR;
     }
 
     public void StartGame()

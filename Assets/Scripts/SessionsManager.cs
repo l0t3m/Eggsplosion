@@ -12,6 +12,7 @@ public class SessionsManager : MonoBehaviour
     [SerializeField] LobbyManager lobbyManager;
     [SerializeField] GameObject sessionsParent;
 
+    const string JOIN_STR = "Joining...";
     private void Start()
     {
         lobbyManager.SessionsListUpdated += InitializeSessions;
@@ -31,6 +32,7 @@ public class SessionsManager : MonoBehaviour
                 sessionobj.Initialize(session);
 
                 sessionobj.OnJoinPressed += JoinSessionPressed;
+                sessionobj.OnJoinPressed += (btn) => { sessionobj.joinText.text = JOIN_STR; };
             }
         }
     }
@@ -43,5 +45,6 @@ public class SessionsManager : MonoBehaviour
     public void JoinSessionPressed(string sessionName)
     {
         lobbyManager.StartSession(sessionName);
+
     }
 }

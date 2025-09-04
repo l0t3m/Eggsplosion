@@ -401,6 +401,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   sessionName: {fileID: 3722295603972638054}
   sessionAmount: {fileID: 8344870370052446842}
+  joinText: {fileID: 8638749493242424}
 --- !u!1 &7634682804637940543
 GameObject:
   m_ObjectHideFlags: 0
