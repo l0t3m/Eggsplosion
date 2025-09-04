@@ -7,6 +7,7 @@ public class InitializeSession : MonoBehaviour
 {
     [SerializeField] TextMeshProUGUI sessionName;
     [SerializeField] TextMeshProUGUI sessionAmount;
+    public TextMeshProUGUI joinText;
 
     public event Action<string> OnJoinPressed;
 
@@ -20,4 +21,6 @@ public class InitializeSession : MonoBehaviour
     {
         OnJoinPressed?.Invoke(sessionName.text);
     }
+
+
 }
