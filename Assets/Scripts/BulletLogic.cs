@@ -12,6 +12,8 @@ public class BulletLogic : NetworkBehaviour
 
     [SerializeField] private Rigidbody rb;
 
+    const string PLAYER_TAG = "Player";
+
     private float timeToDespawn;
 
     public override void Spawned()
@@ -53,7 +55,7 @@ public class BulletLogic : NetworkBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.transform.tag == "Player")
+        if (collision.transform.tag == PLAYER_TAG)
         {
             RPC_DestroyMe(collision.gameObject.GetComponent<NetworkObject>().Id);
         }

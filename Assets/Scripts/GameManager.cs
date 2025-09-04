@@ -53,17 +53,21 @@ public class GameManager : MonoBehaviour
         if (networkRunner.IsServer)
         {
             SendChatMessage(-1, "ALL PLAYERS ARE READY");
-            int index = 0;
-            foreach (var pref in networkRunner.ActivePlayers)
-            {
-                var player = await networkRunner.SpawnAsync(playerPrefab, spawnPointsLocations[index].position, spawnPointsLocations[index].rotation, inputAuthority:pref);
-                PlayerLogic pl = player.GetComponent<PlayerLogic>();
-                pl.RPC_ColorPlayer(characterSelection.UIColors[characterSelection.selectedColors[index + 1]].color);              
-                index++;
-            }
+            
             networkRunner.Despawn(ReadyText.GetComponent<NetworkObject>());
             networkRunner.Despawn(readyButton.GetComponent<NetworkObject>());
             networkRunner.Despawn(characterSelection.transform.parent.GetComponent<NetworkObject>());
+        }
+        else
+        {
+            foreach (var pref in networkRunner.ActivePlayers)
+            {
+                var player = await networkRunner.SpawnAsync(playerPrefab, spawnPointsLocations[pref.PlayerId].position, spawnPointsLocations[pref.PlayerId ].rotation, inputAuthority: pref);
+                PlayerLogic pl = player.GetComponent<PlayerLogic>();
+                Color clr = characterSelection.UIColors[characterSelection.selectedColors[pref.PlayerId]].color;
+                Debug.Log(clr);
+                pl.RPC_ColorPlayer(clr);
+            }
         }
     }
 

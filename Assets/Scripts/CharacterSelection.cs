@@ -18,10 +18,11 @@ public class CharacterSelection : NetworkBehaviour
 
     private System.Collections.IEnumerator SpawnLogic()
     {
-        selectedColors = new int[Runner.SessionInfo.MaxPlayers];
+        selectedColors = new int[Runner.SessionInfo.MaxPlayers+1];
         myImage = GetComponentInChildren<Image>();
-        NextButton();
-        myImage.material = UIColors[mySelectedColor];
+        mySelectedColor = 0;
+        for (int i = 0; i < Runner.LocalPlayer.PlayerId; i++)
+            NextButton();
         yield return null;
     }
 

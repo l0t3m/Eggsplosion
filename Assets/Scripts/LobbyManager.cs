@@ -252,9 +252,10 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
         networkRunner = NetworkRunnerSpawner.SpawnNetworkRunner();
     }
 
+    const string CONNECTED_STR = "Connected to server and lobby successfully!";
     public void OnConnectedToServer(NetworkRunner runner)
     {
-        Debug.Log("Connected to server and lobby successfully!");
+        Debug.Log(CONNECTED_STR);
     }
 
     public void OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessionList)

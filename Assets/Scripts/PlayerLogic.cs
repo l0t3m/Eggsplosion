@@ -27,25 +27,28 @@ public class PlayerLogic : NetworkBehaviour, INetworkRunnerCallbacks
     private float maxShootTime = 1.5f;
     private float actualShootTime = 0;
 
-    private InputAction moveAction;
-    private InputAction attackAction;
+    [SerializeField] InputActionReference moveAction;
+    [SerializeField] InputActionReference attackAction;
+
+    const string SPEED_ANIM_TAG = "Speed";
+    const string THROW_ANIM_TAG = "Throwing";
+
+    private bool shouldShoot = false;
 
     public override void Spawned()
     {
         base.Spawned();
         Runner.AddCallbacks(this);
         Runner.ProvideInput = true;
-        moveAction = InputSystem.actions.FindAction("Move");
-        attackAction = InputSystem.actions.FindAction("Attack");
     }
 
     public override void FixedUpdateNetwork()
     {
         base.FixedUpdateNetwork();
-        actualShootTime -= Time.fixedDeltaTime;
+        
         if (GetInput(out InputStruct data))
         {
-            animator.SetFloat("Speed", rb.linearVelocity.magnitude);
+            animator.SetFloat(SPEED_ANIM_TAG, rb.linearVelocity.magnitude);
             if (Runner.IsServer)
             {
                 rb.AddForce(data.MoveDirection, ForceMode.VelocityChange);
@@ -53,6 +56,12 @@ public class PlayerLogic : NetworkBehaviour, INetworkRunnerCallbacks
                     RPC_Shoot(Object.Id, rb.transform.position, data.ShootDirection, transform.rotation);
             }
         }
+    }
+
+    public void Update()
+    {
+        shouldShoot = attackAction.action.IsPressed();
+        actualShootTime -= Time.deltaTime;
     }
 
     private IEnumerator StopAnim(string anim)
@@ -76,10 +85,44 @@ public class PlayerLogic : NetworkBehaviour, INetworkRunnerCallbacks
     [Rpc]
     public void RPC_ColorPlayer(Color color)
     {
-        Material mat = m_renderer.material;
-        mat.color = color;
-        m_renderer.material = mat;
+        m_renderer.material.color = color;
     }
+
+    public void OnInput(NetworkRunner runner, NetworkInput input)
+    {
+        if (!Object.HasInputAuthority)
+            return;
+
+        Vector3 move = Vector3.zero;
+        InputStruct data = new InputStruct();
+
+        Vector2 moveVector = moveAction.action.ReadValue<Vector2>();
+        if (moveVector.magnitude > 0)
+            move = new Vector3(moveVector.x, 0, moveVector.y);
+
+        if (shouldShoot && actualShootTime <= 0)
+        {
+            Vector3 origin = transform.position;
+            Vector3 mouseScreenPos = Mouse.current.position.ReadValue();
+            mouseScreenPos.z = 12.75f;
+
+            Vector3 worldPos = Camera.main.ScreenToWorldPoint(mouseScreenPos);
+            Vector3 direction = (worldPos - origin).normalized;
+            actualShootTime = maxShootTime;
+            data.DidShoot = true;
+            data.ShootDirection = direction;
+            data.ShooterID = Runner.LocalPlayer.PlayerId;
+            animator.SetBool(THROW_ANIM_TAG, true);
+            StartCoroutine(StopAnim(THROW_ANIM_TAG));
+
+            shouldShoot = false;
+        }
+        else
+            data.DidShoot = false;
+        data.MoveDirection = move;
+        input.Set(data);
+    }
+
 
     #region callbacks
     public void OnObjectExitAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player)
@@ -134,67 +177,6 @@ public class PlayerLogic : NetworkBehaviour, INetworkRunnerCallbacks
     public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, ReliableKey key, float progress)
     {
        
-    }
-
-    public void OnInput(NetworkRunner runner, NetworkInput input)
-    {
-        if (!Object.HasInputAuthority)
-            return;
-
-        Vector3 move = Vector3.zero;
-        InputStruct data = new InputStruct();
-
-        /*if (Keyboard.current.wKey.isPressed)
-            move += Vector3.forward;
-        if (Keyboard.current.sKey.isPressed)
-            move -= Vector3.forward;
-        if (Keyboard.current.dKey.isPressed)
-            move += Vector3.right;
-        if (Keyboard.current.aKey.isPressed)
-            move -= Vector3.right;
-        
-        
-       if (Mouse.current.leftButton.isPressed && actualShootTime <= 0)
-        {
-            Vector3 origin = transform.position;
-            Vector3 mouseScreenPos = Mouse.current.position.ReadValue();
-            mouseScreenPos.z = 12.75f;
-
-            Vector3 worldPos = Camera.main.ScreenToWorldPoint(mouseScreenPos);
-            Vector3 direction = (worldPos - origin).normalized;
-            actualShootTime = maxShootTime;
-            data.DidShoot = true;
-            data.ShootDirection = direction;
-            data.ShooterID = Runner.LocalPlayer.PlayerId;
-            animator.SetBool("Throwing", true);
-            StartCoroutine(StopAnim("Throwing"));
-        }
-        else
-            data.DidShoot = false;
-        */
-        Vector2 moveVector = moveAction.ReadValue<Vector2>();
-        if (moveVector.magnitude > 0)
-            move = new Vector3(moveVector.x, 0, moveVector.y);
-
-        if (attackAction.WasPressedThisFrame())
-        {
-            Vector3 origin = transform.position;
-            Vector3 mouseScreenPos = Mouse.current.position.ReadValue();
-            mouseScreenPos.z = 12.75f;
-
-            Vector3 worldPos = Camera.main.ScreenToWorldPoint(mouseScreenPos);
-            Vector3 direction = (worldPos - origin).normalized;
-            actualShootTime = maxShootTime;
-            data.DidShoot = true;
-            data.ShootDirection = direction;
-            data.ShooterID = Runner.LocalPlayer.PlayerId;
-            animator.SetBool("Throwing", true);
-            StartCoroutine(StopAnim("Throwing"));
-        }
-        else
-            data.DidShoot = false;
-        data.MoveDirection = move;
-        input.Set(data);
     }
 
     public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input)
