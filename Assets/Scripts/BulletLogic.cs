@@ -67,7 +67,7 @@ public class BulletLogic : NetworkBehaviour
         if (Runner.TryFindObject(pushMe, out NetworkObject objectToPush))
         {
             if (Vector3.Distance(objectToPush.transform.position, transform.position) < 5)
-                objectToPush.GetComponent<Rigidbody>().AddForce(Direction * 15, ForceMode.Impulse);
+                objectToPush.GetComponent<Rigidbody>().AddForce(Direction * 25, ForceMode.Impulse);
         }
         if (Runner.IsServer)
             Runner.Despawn(Object);

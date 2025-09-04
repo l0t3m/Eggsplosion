@@ -20,7 +20,6 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI ReadyText;
     [SerializeField] ChatHandler chat;
     [SerializeField] CharacterSelection characterSelection;
-    [SerializeField] GameObject WinPanel;
 
     [SerializeField] Transform[] spawnPointsLocations;
     [SerializeField] GameObject playerPrefab;
@@ -57,8 +56,7 @@ public class GameManager : MonoBehaviour
         await ColorPlayers();
         if (networkRunner.IsServer)
         {
-            SendChatMessage(-1, "ALL PLAYERS ARE READY");
-            
+            SendChatMessage(-1, "ALL PLAYERS ARE READY");         
             networkRunner.Despawn(ReadyText.GetComponent<NetworkObject>());
             networkRunner.Despawn(readyButton.GetComponent<NetworkObject>());
             networkRunner.Despawn(characterSelection.transform.parent.GetComponent<NetworkObject>());
@@ -69,11 +67,14 @@ public class GameManager : MonoBehaviour
     {
         foreach (var pref in networkRunner.ActivePlayers)
         {
-            var player = await networkRunner.SpawnAsync(playerPrefab, spawnPointsLocations[pref.PlayerId].position, spawnPointsLocations[pref.PlayerId].rotation, inputAuthority: pref);
-            PlayerLogic pl = player.GetComponent<PlayerLogic>();
-            Color clr = characterSelection.UIColors[characterSelection.selectedColors[pref.AsIndex - 1]].color;
-            pl.RPC_ColorPlayer(clr);
-        }
+            if (!pref.IsMasterClient)
+            {
+                var player = await networkRunner.SpawnAsync(playerPrefab, spawnPointsLocations[pref.PlayerId-1].position, spawnPointsLocations[pref.PlayerId-1].rotation, inputAuthority: pref);
+                PlayerLogic pl = player.GetComponent<PlayerLogic>();
+                Color clr = characterSelection.UIColors[characterSelection.selectedColors[pref.AsIndex - 1]].color;
+                pl.RPC_ColorPlayer(clr);
+            }
+        }       
     }
 
     public void SendReady()
@@ -81,7 +82,7 @@ public class GameManager : MonoBehaviour
         ReadyManagerInstance.RPC_SetReady();
         readyButton.interactable = false;
         
-        SendChatMessage(-1, $"Player {networkRunner.LocalPlayer.AsIndex} has readied up! [{characterSelection.UIColors[characterSelection.selectedColors[networkRunner.LocalPlayer.AsIndex-1]].name}]"); 
+        SendChatMessage(-1, $"Player {networkRunner.LocalPlayer.AsIndex-1} has readied up! [{characterSelection.UIColors[characterSelection.selectedColors[networkRunner.LocalPlayer.AsIndex-1]].name}]"); 
     }
 
     public void SendChatMessage(int sender, string message)
@@ -89,17 +90,8 @@ public class GameManager : MonoBehaviour
         chat.RPC_SendChatMessageAll(sender, message);
     }
 
-    public void PlayerWon(PlayerRef pRef)
-    {
-        SendChatMessage(-1, $"{pRef.PlayerId} has won!");
-        WinPanel.SetActive(true);
-    }
-
-    public void EndGame()
-    {
-        if (networkRunner.IsServer)
-            networkRunner.LoadScene("MainMenuScene");
-    }
+    
+    
 
     public void PlayerLost()
     {

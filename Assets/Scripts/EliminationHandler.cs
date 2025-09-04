@@ -3,10 +3,12 @@ using Fusion;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class EliminationHandler : NetworkBehaviour
 {
-    [SerializeField] GameObject LosePanel;
+    [SerializeField] GameObject losePanel;
+    [SerializeField] GameObject winPanel;
 
     private Dictionary<PlayerRef, bool> playersAlive;
     public override void Spawned()
@@ -16,9 +18,11 @@ public class EliminationHandler : NetworkBehaviour
         {
             playersAlive = new Dictionary<PlayerRef, bool>();
             foreach (var player in Runner.ActivePlayers)
-                playersAlive[player] = true;
+            {
+                if (Runner.LocalPlayer != player)
+                    playersAlive[player] = true;
 
-            playersAlive[Runner.LocalPlayer] = false;
+            }
         }
     }
 
@@ -29,19 +33,38 @@ public class EliminationHandler : NetworkBehaviour
             if (collision.gameObject.tag == "Player")
             {
                 NetworkObject playerNO = collision.gameObject.GetComponent<NetworkObject>();
+                RPC_PlayerLost(playerNO.InputAuthority);
                 playersAlive[playerNO.InputAuthority] = false;
                 Runner.Despawn(playerNO);
-                
-                if (playersAlive.Count(a => a.Value == true) == 1)
+                Debug.Log(playersAlive.Count(a => a.Value == true));
+                if (playersAlive.Count(a => a.Value == true) <= 1)
                 {
-                    GameManager.Instance.PlayerWon(playersAlive.FirstOrDefault(a => a.Value == true).Key);
+                    PlayerRef winner = playersAlive.FirstOrDefault(a => a.Value && a.Key != PlayerRef.None && a.Key != Runner.LocalPlayer).Key;
+                    Debug.Log(winner.PlayerId);
+                    RPC_ShowWinToPlayer(winner);
                 }
             }
         }
+     
+    }
 
-        if (collision.gameObject.tag == "Player")
-        {
-            LosePanel.SetActive(true);
-        }
+    [Rpc]
+    private void RPC_PlayerLost([RpcTarget] PlayerRef player)
+    {
+        losePanel.SetActive(true);
+    }
+
+    [Rpc]
+    public void RPC_ShowWinToPlayer([RpcTarget] PlayerRef player)
+    {
+        Debug.Log(player.PlayerId);
+        winPanel.SetActive(true);
+    }
+
+    [Rpc]
+    public void RPC_EndGame()
+    {
+        if (Runner.IsServer)
+            Runner.LoadScene("MainMenuScene");
     }
 }

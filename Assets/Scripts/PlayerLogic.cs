@@ -90,6 +90,8 @@ public class PlayerLogic : NetworkBehaviour, INetworkRunnerCallbacks
 
     public void OnInput(NetworkRunner runner, NetworkInput input)
     {
+        if (Object == null)
+            return;
         if (!Object.HasInputAuthority)
             return;
 

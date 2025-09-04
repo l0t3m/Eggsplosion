@@ -1988,9 +1988,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1847783417}
-        m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
-        m_MethodName: EndGame
+      - m_Target: {fileID: 2138578142}
+        m_TargetAssemblyTypeName: EliminationHandler, Assembly-CSharp
+        m_MethodName: RPC_EndGame
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -3357,7 +3357,6 @@ MonoBehaviour:
   ReadyText: {fileID: 1077521852}
   chat: {fileID: 1384912184}
   characterSelection: {fileID: 1971466583}
-  WinPanel: {fileID: 1703327922}
   spawnPointsLocations:
   - {fileID: 1703279456}
   - {fileID: 1419007335}
@@ -3595,7 +3594,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 2ad85dfe2430c9944a67aabf28740c2d, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -3883,7 +3882,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f2d3cd9181931164ab213e6cc4294d04, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  LosePanel: {fileID: 949428876}
+  losePanel: {fileID: 949428876}
+  winPanel: {fileID: 1703327922}
 --- !u!114 &2138578143
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -41,7 +41,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
             SessionName = rnd.Next().ToString(),
             OnGameStarted = OnGameStarted,
             CustomLobbyName = "EU",
-            PlayerCount = 2,
+            PlayerCount = 3,
             IsVisible = true
         });
     }
