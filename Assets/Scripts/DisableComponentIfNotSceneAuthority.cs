@@ -8,7 +8,7 @@ public class DisableComponentIfNotSceneAuthority : MonoBehaviour
 
     public void Disable(NetworkRunner nr)
     {
-        if (!nr.IsSceneAuthority)
+        if (!nr.IsServer)
             buttonToDisable.interactable = false;
     }
 }

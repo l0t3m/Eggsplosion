@@ -1,7 +1,9 @@
 using Fusion;
 using System.Collections;
 using System.Linq;
+using System.Threading.Tasks;
 using TMPro;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -31,7 +33,7 @@ public class GameManager : MonoBehaviour
     {
         networkRunner = FindFirstObjectByType<NetworkRunner>();
         StartCoroutine(SpawnReadyManagers());
-        ReadyText.text = $"0/{networkRunner.SessionInfo.PlayerCount} ready";
+        ReadyText.text = $"0/{networkRunner.SessionInfo.PlayerCount-1} ready";
     }
 
     private IEnumerator SpawnReadyManagers()
@@ -44,30 +46,31 @@ public class GameManager : MonoBehaviour
 
     private async void SpawnManager()
     {
-        if (networkRunner.IsSharedModeMasterClient)
+        if (networkRunner.IsServer)
             await networkRunner.SpawnAsync(readyManager);
     }
 
     private async void MaxPlayersReady()
     {
-        if (networkRunner.IsSharedModeMasterClient)
+        await ColorPlayers();
+        if (networkRunner.IsServer)
         {
             SendChatMessage(-1, "ALL PLAYERS ARE READY");
-            int index = 0;
-            foreach (var pref in networkRunner.ActivePlayers)
-            {
-                var player = await networkRunner.SpawnAsync(playerPrefab, spawnPointsLocations[index].position, spawnPointsLocations[index].rotation);
-                Debug.Log(player.name);
-                PlayerLogic pl = player.GetComponent<PlayerLogic>();
-                pl.RPC_ColorPlayer(characterSelection.UIColors[characterSelection.selectedColors[index]].color);
-                pl.PlayerID = pref.AsIndex;
-                if (pl.PlayerID != networkRunner.LocalPlayer.AsIndex)
-                    player.ReleaseStateAuthority();
-                index++;
-            }
+            
             networkRunner.Despawn(ReadyText.GetComponent<NetworkObject>());
             networkRunner.Despawn(readyButton.GetComponent<NetworkObject>());
             networkRunner.Despawn(characterSelection.transform.parent.GetComponent<NetworkObject>());
+        }     
+    }
+
+    private async Task ColorPlayers()
+    {
+        foreach (var pref in networkRunner.ActivePlayers)
+        {
+            var player = await networkRunner.SpawnAsync(playerPrefab, spawnPointsLocations[pref.PlayerId].position, spawnPointsLocations[pref.PlayerId].rotation, inputAuthority: pref);
+            PlayerLogic pl = player.GetComponent<PlayerLogic>();
+            Color clr = characterSelection.UIColors[characterSelection.selectedColors[pref.AsIndex - 1]].color;
+            pl.RPC_ColorPlayer(clr);
         }
     }
 
@@ -84,5 +87,20 @@ public class GameManager : MonoBehaviour
         chat.RPC_SendChatMessageAll(sender, message);
     }
 
-    
+    public void PlayerWon(PlayerRef pRef)
+    {
+        SendChatMessage(-1, $"{pRef.PlayerId} has won!");
+        StartCoroutine(nameof(EndGame));
+    }
+
+    private IEnumerator EndGame()
+    {
+        if (networkRunner.IsServer)
+        {
+            yield return new WaitForSeconds(3);
+            networkRunner.LoadScene("MainMenuScene");
+        }
+        
+        yield return null;
+    }
 }

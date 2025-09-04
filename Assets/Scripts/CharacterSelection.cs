@@ -7,7 +7,6 @@ public class CharacterSelection : NetworkBehaviour
 {
     public Material[] UIColors;
     public int[] selectedColors;
-    PlayerRef myRef;
 
     private Image myImage;
     private int mySelectedColor;
@@ -19,11 +18,11 @@ public class CharacterSelection : NetworkBehaviour
 
     private System.Collections.IEnumerator SpawnLogic()
     {
-        myRef = FindFirstObjectByType<NetworkRunner>().LocalPlayer;
-        selectedColors = new int[FindFirstObjectByType<NetworkRunner>().SessionInfo.MaxPlayers];
+        selectedColors = new int[Runner.SessionInfo.MaxPlayers+1];
         myImage = GetComponentInChildren<Image>();
-        NextButton();
-        myImage.material = UIColors[mySelectedColor];
+        mySelectedColor = 0;
+        for (int i = 0; i < Runner.LocalPlayer.PlayerId; i++)
+            NextButton();
         yield return null;
     }
 
@@ -42,7 +41,7 @@ public class CharacterSelection : NetworkBehaviour
                 mySelectedColor = 0;
         } while (selectedColors.Contains(mySelectedColor));
 
-        RPC_SelectColor(myRef.AsIndex-1, mySelectedColor);
+        RPC_SelectColor(Runner.LocalPlayer.PlayerId - 1, mySelectedColor);
         myImage.material = UIColors[mySelectedColor];
     }
 
@@ -55,7 +54,7 @@ public class CharacterSelection : NetworkBehaviour
                 mySelectedColor = UIColors.Length-1;
         } while (selectedColors.Contains(mySelectedColor));
 
-        RPC_SelectColor(myRef.AsIndex-1, mySelectedColor);
+        RPC_SelectColor(Runner.LocalPlayer.PlayerId-1, mySelectedColor);
         myImage.material = UIColors[mySelectedColor];
     }
 }

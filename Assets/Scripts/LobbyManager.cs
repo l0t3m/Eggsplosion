@@ -8,11 +8,10 @@ using UnityEngine.UI;
 
 public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
 {
-    [SerializeField] NetworkRunner networkRunner;
+    private NetworkRunner networkRunner;
 
     [SerializeField] private GameObject sessionPanel;
     [SerializeField] private Button startSessionButton;
-    [SerializeField] private Button endSessionButton;
     [SerializeField] private TextMeshProUGUI maxPlayersAllowed;
     [SerializeField] private UIManager uiManager;
     [SerializeField] private HandleStartButtonBehavior startBehavior;
@@ -23,21 +22,27 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public event Action<List<SessionInfo>> SessionsListUpdated;
 
+    const string CON_STR = "Connecting...";
     void Start()
     {
+        networkRunner = NetworkRunnerSpawner.SpawnNetworkRunner();
         networkRunner.AddCallbacks(this);
-        endSessionButton.interactable = false;
+#if UNITY_SERVER
+        StartSessionServer();
+#endif
     }
 
-    public void StartSession()
+    private void StartSessionServer()
     {
+        System.Random rnd = new System.Random();
         networkRunner.StartGame(new StartGameArgs()
         {
-            GameMode = GameMode.Shared,
-            SessionName = "GameID",
+            GameMode = GameMode.Server,
+            SessionName = rnd.Next().ToString(),
             OnGameStarted = OnGameStarted,
-            PlayerCount = int.Parse(maxPlayersAllowed.text),
-            IsVisible = publicToggleField.isOn
+            CustomLobbyName = "EU",
+            PlayerCount = 2,
+            IsVisible = true
         });
     }
 
@@ -45,11 +50,9 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     {
         var res = await networkRunner.StartGame(new StartGameArgs()
         {
-            GameMode = GameMode.Shared,
+            GameMode = GameMode.Client,
             SessionName = text.text,
             OnGameStarted = OnGameStarted,
-            PlayerCount = int.Parse(maxPlayersAllowed.text),
-            IsVisible = publicToggleField.isOn
         });
         if (!res.Ok)
             PlayerDisconnected(res.ShutdownReason.ToString());
@@ -59,10 +62,9 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     {
         var res = await networkRunner.StartGame(new StartGameArgs()
         {
-            GameMode = GameMode.Shared,
+            GameMode = GameMode.Client,
             SessionName = text,
             OnGameStarted = OnGameStarted,
-            PlayerCount = int.Parse(maxPlayersAllowed.text)
         });
         if (!res.Ok)
             PlayerDisconnected(res.ShutdownReason.ToString());
@@ -73,10 +75,6 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
         Debug.Log($"Game started, session name: {runner.SessionInfo.Name}");
 
         uiManager.SwitchPanel(3);
-
-        startSessionButton.interactable = false;
-        endSessionButton.interactable = true;
-        privacyText.text = runner.SessionInfo.IsVisible ? "Public lobby" : "Private lobby";
     }
 
     public void EndSession()
@@ -88,8 +86,10 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
 
         uiManager.SwitchPanel(2);
 
+        Destroy(networkRunner.gameObject);
+        networkRunner = NetworkRunnerSpawner.SpawnNetworkRunner();
+
         startSessionButton.interactable = true;
-        endSessionButton.interactable = false;
     }
 
     public async void JoinLobbyAsHost(string lobbyName)
@@ -124,6 +124,11 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
         JoinLobbyAsGuest(text.text);
     }
 
+    public void RenameButtonToPending(TextMeshProUGUI text)
+    {
+        text.text = CON_STR;
+    }
+
     public void StartGame()
     {
         startBehavior.StartGame(networkRunner);
@@ -131,7 +136,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
 
     private void RefreshRoomUI()
     {
-        uiManager.UpdatePlayersConnectedText(networkRunner.SessionInfo.PlayerCount);
+        uiManager.UpdatePlayersConnectedText(networkRunner.SessionInfo.PlayerCount-1);
         startBehavior.HandleChangeInSession(networkRunner);
         //if (networkRunner.IsRunning && !networkRunner.IsShutdown)
         //{
@@ -144,10 +149,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     }
 
     #region RunnerCallBacks
-    public void OnConnectFailed(NetworkRunner runner, NetAddress remoteAddress, NetConnectFailedReason reason)
-    {
-        PlayerDisconnected(reason.ToString());
-    }
+   
 
     
 
@@ -159,11 +161,6 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     public void OnCustomAuthenticationResponse(NetworkRunner runner, Dictionary<string, object> data)
     {
       
-    }
-
-    public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason)
-    {
-        PlayerDisconnected(reason.ToString());
     }
 
     public void OnHostMigration(NetworkRunner runner, HostMigrationToken hostMigrationToken)
@@ -199,11 +196,25 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
     }
     #endregion
 
+    public void OnConnectFailed(NetworkRunner runner, NetAddress remoteAddress, NetConnectFailedReason reason)
+    {
+        PlayerDisconnected(reason.ToString());
+        Destroy(networkRunner.gameObject);
+        networkRunner = NetworkRunnerSpawner.SpawnNetworkRunner();
+    }
+    public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason)
+    {
+        PlayerDisconnected(reason.ToString());
+        Destroy(networkRunner.gameObject);
+        networkRunner = NetworkRunnerSpawner.SpawnNetworkRunner();
+    }
 
     private void PlayerDisconnected(string reason)
     {
         disconnectionPanel.gameObject.SetActive(true);
         disconnectionPanel.OnDisconnect(reason);
+        Destroy(networkRunner.gameObject);
+        networkRunner = NetworkRunnerSpawner.SpawnNetworkRunner();
     }
     public void OnObjectEnterAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player)
     {
@@ -221,6 +232,10 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
             isLocalPlayer = true;
 
         Debug.Log($"Player {player.PlayerId} joined, localPlayer: {isLocalPlayer}");
+#if UNITY_SERVER
+        if (runner.SessionInfo.PlayerCount == runner.SessionInfo.MaxPlayers)
+            StartGame();
+#endif
         RefreshRoomUI();
     }
 
@@ -229,17 +244,24 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
 
         Debug.Log($"{player.PlayerId} left");
         RefreshRoomUI();
-
+        if (player.PlayerId == networkRunner.LocalPlayer.PlayerId)
+        {
+            Destroy(networkRunner.gameObject);
+            networkRunner = NetworkRunnerSpawner.SpawnNetworkRunner();
+        }
     }
 
     public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)
     {
         RefreshRoomUI();
+        Destroy(networkRunner.gameObject);
+        networkRunner = NetworkRunnerSpawner.SpawnNetworkRunner();
     }
 
+    const string CONNECTED_STR = "Connected to server and lobby successfully!";
     public void OnConnectedToServer(NetworkRunner runner)
     {
-        Debug.Log("Connected to server and lobby successfully!");
+        Debug.Log(CONNECTED_STR);
     }
 
     public void OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessionList)
@@ -248,7 +270,7 @@ public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
 
         foreach (var session in sessionList)
         {
-            Debug.Log($"Session Name: {session.Name}, Player Count: {session.PlayerCount}");
+            Debug.Log($"Session Name: {session.Name}, Player Count: {session.PlayerCount-1}");
         }
 
         SessionsListUpdated?.Invoke(sessionList);

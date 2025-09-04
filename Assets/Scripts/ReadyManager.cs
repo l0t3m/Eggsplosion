@@ -11,7 +11,7 @@ public class ReadyManager : NetworkBehaviour
     public void RPC_SetReady(RpcInfo info = default)
     {
         readyCounter++;
-        int playerCount = FindFirstObjectByType<NetworkRunner>().SessionInfo.PlayerCount;
+        int playerCount = Runner.SessionInfo.PlayerCount-1;
         GameManager.Instance.ReadyText.text = $"{readyCounter}/{playerCount} Ready";
         if (readyCounter >= playerCount)
             OnReadyCounterReachedMax?.Invoke();

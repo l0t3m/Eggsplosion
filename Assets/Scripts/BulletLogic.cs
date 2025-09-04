@@ -8,11 +8,11 @@ public class BulletLogic : NetworkBehaviour
     [Networked]
     [HideInInspector] public Vector3 Direction { get; set; }
     [Networked]
-    [HideInInspector] public int ShooterID { get; set; } = -1;
-    [Networked]
     [HideInInspector] public NetworkId ShooterObjectId { get; set; }
 
     [SerializeField] private Rigidbody rb;
+
+    const string PLAYER_TAG = "Player";
 
     private float timeToDespawn;
 
@@ -20,13 +20,13 @@ public class BulletLogic : NetworkBehaviour
     {
         base.Spawned();
         
-        StartCoroutine(ClaimBullet());
+        StartCoroutine(DoBulletLogic());
         timeToDespawn = 5;
     }
 
-    private IEnumerator ClaimBullet()
+    private IEnumerator DoBulletLogic()
     {
-        if (ShooterID != -1)
+        if (Direction != Vector3.zero)
         {
             transform.LookAt(Direction);
             rb.AddForce(Direction * 19f, ForceMode.Impulse);
@@ -55,31 +55,28 @@ public class BulletLogic : NetworkBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.transform.tag == "Player")
+        if (collision.transform.tag == PLAYER_TAG)
         {
-            
             RPC_DestroyMe(collision.gameObject.GetComponent<NetworkObject>().Id);
         }
     }
 
-    [Rpc]
+    [Rpc(sources: RpcSources.All, targets: RpcTargets.StateAuthority)]
     public void RPC_DestroyMe(NetworkId pushMe)
     {
-        NetworkRunner runner = FindFirstObjectByType<NetworkRunner>();
-        if (runner.TryFindObject(pushMe, out NetworkObject objectToPush))
+        if (Runner.TryFindObject(pushMe, out NetworkObject objectToPush))
         {
-            if (Vector3.Distance(objectToPush.transform.position, Object.transform.position) < 5)
+            if (Vector3.Distance(objectToPush.transform.position, transform.position) < 5)
                 objectToPush.GetComponent<Rigidbody>().AddForce(Direction * 15, ForceMode.Impulse);
         }
-        if (runner.IsSharedModeMasterClient)
-            runner.Despawn(Object);
+        if (Runner.IsServer)
+            Runner.Despawn(Object);
     }
 
-    [Rpc]
+    [Rpc(sources: RpcSources.All, targets: RpcTargets.StateAuthority)]
     public void RPC_DestroyMe()
     {
-        NetworkRunner runner = FindFirstObjectByType<NetworkRunner>();
-        if (runner.IsSharedModeMasterClient)
-            runner.Despawn(Object);
+        if (Runner.IsServer)
+            Runner.Despawn(Object);
     }
 }

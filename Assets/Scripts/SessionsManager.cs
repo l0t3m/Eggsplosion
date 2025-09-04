@@ -1,15 +1,18 @@
 using Fusion;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class SessionsManager : MonoBehaviour
 {
     [SerializeField] InitializeSession sessionPrefab;
     [SerializeField] LobbyManager lobbyManager;
-    [SerializeField] NetworkRunner networkRunner;
     [SerializeField] GameObject sessionsParent;
 
+    const string JOIN_STR = "Joining...";
     private void Start()
     {
         lobbyManager.SessionsListUpdated += InitializeSessions;
@@ -17,13 +20,20 @@ public class SessionsManager : MonoBehaviour
 
     public void InitializeSessions(List<SessionInfo> sessions)
     {
+        for (int i = 0; i < sessionsParent.transform.childCount; i++)
+            Destroy(sessionsParent.transform.GetChild(i).gameObject);
+
         foreach (SessionInfo session in sessions)
         {
-            InitializeSession sessionobj = Instantiate<InitializeSession>(sessionPrefab);
-            sessionobj.transform.parent = sessionsParent.transform;
-            sessionobj.Initialize(session);
+            if (session.IsValid && session.IsOpen && sessions.Where(si => si.Name == session.Name).Count() <= 1)
+            {
+                InitializeSession sessionobj = Instantiate(sessionPrefab);
+                sessionobj.transform.parent = sessionsParent.transform;
+                sessionobj.Initialize(session);
 
-            sessionobj.OnJoinPressed += JoinSessionPressed;
+                sessionobj.OnJoinPressed += JoinSessionPressed;
+                sessionobj.OnJoinPressed += (btn) => { sessionobj.joinText.text = JOIN_STR; };
+            }
         }
     }
 
@@ -35,5 +45,6 @@ public class SessionsManager : MonoBehaviour
     public void JoinSessionPressed(string sessionName)
     {
         lobbyManager.StartSession(sessionName);
+
     }
 }
