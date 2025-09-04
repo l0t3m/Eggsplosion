@@ -50,6 +50,14 @@ public class GameManager : MonoBehaviour
 
     private async void MaxPlayersReady()
     {
+        foreach (var pref in networkRunner.ActivePlayers)
+        {
+            var player = await networkRunner.SpawnAsync(playerPrefab, spawnPointsLocations[pref.PlayerId].position, spawnPointsLocations[pref.PlayerId].rotation, inputAuthority: pref);
+            PlayerLogic pl = player.GetComponent<PlayerLogic>();
+            Color clr = characterSelection.UIColors[characterSelection.selectedColors[pref.PlayerId - 1]].color;
+            Debug.Log(clr);
+            pl.RPC_ColorPlayer(clr);
+        }
         if (networkRunner.IsServer)
         {
             SendChatMessage(-1, "ALL PLAYERS ARE READY");
@@ -58,17 +66,9 @@ public class GameManager : MonoBehaviour
             networkRunner.Despawn(readyButton.GetComponent<NetworkObject>());
             networkRunner.Despawn(characterSelection.transform.parent.GetComponent<NetworkObject>());
         }
-        else
-        {
-            foreach (var pref in networkRunner.ActivePlayers)
-            {
-                var player = await networkRunner.SpawnAsync(playerPrefab, spawnPointsLocations[pref.PlayerId].position, spawnPointsLocations[pref.PlayerId ].rotation, inputAuthority: pref);
-                PlayerLogic pl = player.GetComponent<PlayerLogic>();
-                Color clr = characterSelection.UIColors[characterSelection.selectedColors[pref.PlayerId]].color;
-                Debug.Log(clr);
-                pl.RPC_ColorPlayer(clr);
-            }
-        }
+        
+            
+       
     }
 
     public void SendReady()
