@@ -6,6 +6,8 @@ using UnityEngine;
 
 public class EliminationHandler : NetworkBehaviour
 {
+    [SerializeField] GameObject LosePanel;
+
     private Dictionary<PlayerRef, bool> playersAlive;
     public override void Spawned()
     {
@@ -29,11 +31,17 @@ public class EliminationHandler : NetworkBehaviour
                 NetworkObject playerNO = collision.gameObject.GetComponent<NetworkObject>();
                 playersAlive[playerNO.InputAuthority] = false;
                 Runner.Despawn(playerNO);
+                
                 if (playersAlive.Count(a => a.Value == true) == 1)
                 {
                     GameManager.Instance.PlayerWon(playersAlive.FirstOrDefault(a => a.Value == true).Key);
                 }
             }
+        }
+
+        if (collision.gameObject.tag == "Player")
+        {
+            LosePanel.SetActive(true);
         }
     }
 }

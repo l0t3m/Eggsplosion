@@ -3,6 +3,7 @@ using System.Collections;
 using System.Linq;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
@@ -17,6 +18,7 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI ReadyText;
     [SerializeField] ChatHandler chat;
     [SerializeField] CharacterSelection characterSelection;
+    [SerializeField] GameObject WinPanel;
 
     [SerializeField] Transform[] spawnPointsLocations;
     [SerializeField] GameObject playerPrefab;
@@ -87,17 +89,18 @@ public class GameManager : MonoBehaviour
     public void PlayerWon(PlayerRef pRef)
     {
         SendChatMessage(-1, $"{pRef.PlayerId} has won!");
-        StartCoroutine(nameof(EndGame));
+        WinPanel.SetActive(true);
     }
 
-    private IEnumerator EndGame()
+    public void EndGame()
     {
         if (networkRunner.IsServer)
-        {
-            yield return new WaitForSeconds(3);
             networkRunner.LoadScene("MainMenuScene");
-        }
-        
-        yield return null;
     }
+
+    public void PlayerLost()
+    {
+        SceneManager.LoadScene(0);
+    }
+
 }
